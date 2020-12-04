@@ -4,12 +4,12 @@
     <ClCompile Include="byeintegrity5.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="byeintegrity5-uac.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\x64\Release\payload.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.hpp" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "resource.h"
+#include "resource.hpp"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -27,7 +27,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 1 TEXTINCLUDE 
 BEGIN
-    "resource.h\0"
+    "resource.hpp\0"
 END
 
 2 TEXTINCLUDE 
@@ -50,7 +50,7 @@ END
 // PAYLOAD
 //
 
-IDR_DLLPAYLOAD          PAYLOAD                 "C:\\Users\\Arush\\source\\repos\\byeintegrity5-uac\\x64\\Release\\payload.dll"
+IDR_DLLPAYLOAD          PAYLOAD                 "..\\x64\\Release\\payload.dll"
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
