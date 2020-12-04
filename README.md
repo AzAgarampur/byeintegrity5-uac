@@ -11,7 +11,7 @@ The fifth attack to bypass User Account Control (UAC) **at any level** and gain 
  - WLAN AutoConfig service running (most people don't need to worry about this)
 
 ## How it works
-ByeIntegrity V uses a DLL hijack, like ByeIntegrity 1.0, environment variable, like ByeIntegrity 4.0, and something completely different � the Task Scheduler.
+ByeIntegrity V uses a DLL hijack, like ByeIntegrity 1.0, environment variable, like ByeIntegrity 4.0, and something completely different — the Task Scheduler.
 
 ByeIntegrity V uses the documented Task Scheduler COM interface to launch the `CDSSync` task located at `\Microsoft\Windows\WlanSvc` in the Task Scheduler library. ByeIntegrity V also modifies the `SystemRoot` environment variable for the current user to represent a custom WINDOWS folder. After setting the custom `SystemRoot` variable, the `CDSSync` task is started. This triggers the attack and launched `cmd.exe` running as an administrator, therefore bypassing UAC.
 
@@ -40,7 +40,7 @@ I presented this method to @hfiref0x, but after working with him, we found a pro
 Here's a link to the GitHub issue: https://github.com/hfiref0x/UACME/issues/90
 
 ## Using the code
-If you�re reading this then you probably know how to compile the source. Just note that this hasn�t been tested or designed with x86 in mind at all, and it probably won�t work on x86 anyways.
+If you're reading this then you probably know how to compile the source. Just note that this hasn't been tested or designed with x86 in mind at all, and it probably won't work on x86 anyways.
 
 Just like UACMe, **I will never upload compiled binaries to this repo.** There are always people who want the world to crash and burn, and I'm not going to provide an easy route for them to run this on somebody else's computer and cause intentional damage. I also don't want script-kiddies to use this attack without understanding what it does and the damage it can cause.
 
