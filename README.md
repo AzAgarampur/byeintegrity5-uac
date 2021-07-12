@@ -53,5 +53,3 @@ I've only developed and tested this attack on Windows 10 build 19042. I think it
 
 ## What's the deal with the WLAN AutoConfig service?
 Read: https://github.com/hfiref0x/UACME/issues/90
-
-[![HitCount](http://hits.dwyl.com/AzAgarampur/byeintegrity5-uac.svg)](http://hits.dwyl.com/AzAgarampur/byeintegrity5-uac)
